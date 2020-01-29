@@ -1,28 +1,32 @@
 import subprocess
 import time
 
-oldAddresses = []
-
-while True:
+def getConnectedDevices():
     p = subprocess.Popen("arp-scan -l", stdout=subprocess.PIPE, shell=True)
     (output, err) = p.communicate()
     p_status = p.wait()
+    addresses = []
     if output:
-        newAddresses = []
         for line in output.splitlines():
             if (line.startswith("192")):
-                newAddresses.append(line[line.index(":")-2:line.rindex(":")+3])
-        
-        for address in newAddresses:
-            if address not in oldAddresses:
-                print "New device joined: " + address
-
-        for address in oldAddresses:
-            if address not in newAddresses:
-                print "Device left: " + address
-
-        oldAddresses = newAddresses
+                addresses.append(line[line.index(":")-2:line.rindex(":")+3])
     else:
         print "Error: " + err
+    return addresses
+
+oldAddresses = getConnectedDevices()
+
+while True:
+    newAddresses = getConnectedDevices()
+        
+    for address in newAddresses:
+        if address not in oldAddresses:
+            print "Device joined: " + address
+
+    for address in oldAddresses:
+        if address not in newAddresses:
+            print "Device left  : " + address
+
+    oldAddresses = newAddresses
 
     time.sleep(5)
